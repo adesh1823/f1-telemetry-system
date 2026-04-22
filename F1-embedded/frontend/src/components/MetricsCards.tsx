@@ -6,6 +6,7 @@ import { Activity, Thermometer, Droplets, Zap } from 'lucide-react';
 interface MetricsCardsProps {
   latestData: {
     rpm: number;
+    speed_kmh: number;
     temperature: number;
     humidity: number;
     acc_mag: number;
@@ -18,6 +19,13 @@ export default function MetricsCards({ latestData }: MetricsCardsProps) {
   if (!latestData) return null;
 
   const cards = [
+    {
+      title: "SPEED",
+      value: (latestData.speed_kmh || 0).toFixed(1),
+      unit: "KM/H",
+      icon: <Zap className="w-4 h-4 text-crypto-primary" />,
+      color: "text-crypto-primary"
+    },
     {
       title: "CORE TEMP",
       value: latestData.temperature.toFixed(1),

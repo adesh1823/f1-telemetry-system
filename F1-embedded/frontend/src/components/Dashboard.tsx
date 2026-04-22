@@ -134,7 +134,7 @@ export default function Dashboard() {
               <span className="text-[9px] text-crypto-primary tracking-widest uppercase">SYS_GAUGE_01</span>
               <span className="text-[9px] text-metric-green font-bold">● LIVE</span>
             </div>
-            <RPMGauge value={latestData?.rpm || 0} />
+            <RPMGauge value={latestData?.rpm || 0} speed={latestData?.speed_kmh || 0} />
             
             <div className="w-full h-[1px] bg-white/5 my-4"></div>
             

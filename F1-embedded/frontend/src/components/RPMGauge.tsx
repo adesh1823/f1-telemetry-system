@@ -4,11 +4,12 @@ import { motion } from 'framer-motion';
 
 interface RPMGaugeProps {
   value: number;
+  speed: number;
   min?: number;
   max?: number;
 }
 
-export default function RPMGauge({ value, min = 0, max = 8000 }: RPMGaugeProps) {
+export default function RPMGauge({ value, speed, min = 0, max = 8000 }: RPMGaugeProps) {
   const percentage = Math.min(Math.max((value - min) / (max - min), 0), 1);
   const radius = 80;
   const strokeWidth = 12;
@@ -67,8 +68,23 @@ export default function RPMGauge({ value, min = 0, max = 8000 }: RPMGaugeProps) 
           {Math.round(value)}
         </motion.span>
         <span className="text-[10px] font-bold text-crypto-primary uppercase tracking-[0.2em] -mt-1">
-          RPM / ENGINE
+          RPM
         </span>
+        
+        {/* Speed Sub-readout */}
+        <div className="mt-4 flex flex-col items-center">
+          <motion.span 
+            key={speed.toFixed(1)}
+            initial={{ y: 5, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="text-xl font-black text-metric-yellow"
+          >
+            {speed.toFixed(1)}
+          </motion.span>
+          <span className="text-[8px] font-bold text-metric-yellow/50 uppercase tracking-widest">
+            KM/H
+          </span>
+        </div>
       </div>
 
       {/* Technical Accents */}
