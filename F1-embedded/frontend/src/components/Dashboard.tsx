@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import MetricsCards from './MetricsCards';
 import TelemetryCharts from './TelemetryCharts';
 import InsightsBoard from './InsightsBoard';
@@ -8,6 +8,8 @@ import RPMGauge from './RPMGauge';
 import GForceRadar from './GForceRadar';
 
 const API_BASE = "https://adeshjain-f1-telemetry.hf.space";
+const POLL_INTERVAL = 5000;   // 5 seconds
+const MAX_POINTS    = 30;     // rolling window size
 
 export default function Dashboard() {
   const [data, setData] = useState<any[]>([]);
@@ -16,45 +18,65 @@ export default function Dashboard() {
   const [prediction, setPrediction] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState(POLL_INTERVAL / 1000);
+  const seenTimestamps = useRef<Set<string>>(new Set());
 
-  const fetchDashboardData = async () => {
-    const endpoints = ['data', 'metrics', 'ai', 'predict'];
+  const fetchDashboardData = useCallback(async () => {
     const results: any = {};
     let hasError = false;
 
-    for (const endpoint of endpoints) {
+    // Fetch all endpoints in parallel for speed
+    await Promise.all(['data', 'metrics', 'ai', 'predict'].map(async (endpoint) => {
       try {
         const response = await fetch(`${API_BASE}/${endpoint}`);
-        if (!response.ok) {
-          console.error(`Endpoint ${endpoint} returned status ${response.status}`);
-          hasError = true;
-          continue;
-        }
+        if (!response.ok) { hasError = true; return; }
         results[endpoint] = await response.json();
-      } catch (err) {
-        console.error(`Failed to fetch ${endpoint}:`, err);
+      } catch {
         hasError = true;
+      }
+    }));
+
+    if (results.data) {
+      const incoming: any[] = results.data.data || [];
+      // Append only NEW points (deduplicate by timestamp)
+      const newPoints = incoming.filter(
+        (p: any) => p.timestamp && !seenTimestamps.current.has(p.timestamp)
+      );
+      newPoints.forEach((p: any) => seenTimestamps.current.add(p.timestamp));
+
+      if (newPoints.length > 0) {
+        setData(prev => {
+          const merged = [...prev, ...newPoints];
+          // Keep only the last MAX_POINTS for the chart
+          return merged.slice(-MAX_POINTS);
+        });
+      } else if (data.length === 0) {
+        // First load — seed with whatever came back
+        const seed = incoming.slice(-MAX_POINTS);
+        seed.forEach((p: any) => p.timestamp && seenTimestamps.current.add(p.timestamp));
+        setData(seed);
       }
     }
 
-    if (results.data) setData(results.data.data || []);
     if (results.metrics) setMetrics(results.metrics);
     if (results.ai) setAiInsights(results.ai);
     if (results.predict) setPrediction(results.predict);
-
-    if (hasError && !results.data) {
-      setError("Failed to connect to backend telemetry service.");
-    } else {
-      setError(null);
-    }
-    
+    if (hasError && data.length === 0) setError("Failed to connect to backend.");
+    else setError(null);
     if (loading) setLoading(false);
-  };
+    setCountdown(POLL_INTERVAL / 1000);
+  }, [loading, data.length]);
 
   useEffect(() => {
     fetchDashboardData();
-    const interval = setInterval(fetchDashboardData, 15000);
-    return () => clearInterval(interval);
+    const poll = setInterval(fetchDashboardData, POLL_INTERVAL);
+    return () => clearInterval(poll);
+  }, [fetchDashboardData]);
+
+  // Countdown ticker
+  useEffect(() => {
+    const tick = setInterval(() => setCountdown(c => Math.max(0, c - 1)), 1000);
+    return () => clearInterval(tick);
   }, []);
 
   if (loading) {
@@ -131,7 +153,10 @@ export default function Dashboard() {
             <div className="flex-1 hud-panel p-2 min-h-[300px]">
                <div className="flex justify-between items-center mb-2 px-2 pb-2 border-b border-white/5">
                  <span className="text-[9px] text-crypto-primary tracking-widest uppercase">SYS_TRACE_02</span>
-                 <span className="text-[9px] text-crypto-primary/50">HISTORY_BUFFER</span>
+                 <div className="flex items-center gap-3">
+                   <span className="text-[9px] text-crypto-primary/50">HISTORY_BUFFER // {data.length}pts</span>
+                   <span className="text-[9px] text-metric-green font-bold tabular-nums">↻ {countdown}s</span>
+                 </div>
                </div>
                <TelemetryCharts data={data} />
             </div>
