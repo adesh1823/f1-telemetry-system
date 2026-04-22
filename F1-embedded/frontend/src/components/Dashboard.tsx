@@ -7,7 +7,7 @@ import InsightsBoard from './InsightsBoard';
 import RPMGauge from './RPMGauge';
 import GForceRadar from './GForceRadar';
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = "https://adeshjain-f1-telemetry.hf.space";
 
 export default function Dashboard() {
   const [data, setData] = useState<any[]>([]);
