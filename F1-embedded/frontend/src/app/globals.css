@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-inter), sans-serif;
+
+  --color-crypto-bg: #030712;
+  --color-crypto-card: rgba(17, 24, 39, 0.6);
+  --color-crypto-card-hover: rgba(31, 41, 55, 0.8);
+  --color-crypto-primary: #00f2ff; /* Cyber Cyan */
+  --color-crypto-primary-glow: rgba(0, 242, 255, 0.4);
+  --color-crypto-accent: #ff0055; /* Racing Crimson */
+  --color-crypto-accent-glow: rgba(255, 0, 85, 0.4);
+
+  --color-metric-green: #00ff9d;
+  --color-metric-red: #ff3e3e;
+  --color-metric-yellow: #ffcc00;
+}
+
+:root {
+  --background: #02040a;
+  --foreground: #e2e8f0;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-image: 
+    linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-attachment: fixed;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(to bottom, rgba(0, 242, 255, 0.2), transparent);
+  animation: scanline 8s linear infinite;
+  pointer-events: none;
+  z-index: 50;
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100vh); }
+  100% { transform: translateY(100vh); }
+}
+
+/* Technical HUD Borders */
+.hud-panel {
+  background: rgba(8, 12, 17, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 242, 255, 0.1);
+  position: relative;
+  /* Sharp corners instead of rounded */
+}
+
+.hud-panel::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid var(--color-crypto-primary);
+  border-left: 2px solid var(--color-crypto-primary);
+}
+
+.hud-panel::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 8px;
+  height: 8px;
+  border-bottom: 2px solid var(--color-crypto-primary);
+  border-right: 2px solid var(--color-crypto-primary);
+}
+
+.glow-cyan {
+  filter: drop-shadow(0 0 8px rgba(0, 242, 255, 0.5));
+}
+
+.glow-crimson {
+  filter: drop-shadow(0 0 8px rgba(255, 0, 85, 0.5));
+}
